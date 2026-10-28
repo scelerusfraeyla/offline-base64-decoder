@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Base64 Decoder & Image Converter</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23b8e6f7'/%3E%3Cstop offset='1' stop-color='%230e5f8a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3Ccircle cx='24' cy='22' r='8' fill='rgba(255,255,255,0.85)'/%3E%3C/svg%3E">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .footer {
+            position: relative;
+            z-index: 1;
+            width: 820px;
+            max-width: 100%;
+            margin: 24px auto 40px;
+            padding: 14px 24px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            background: linear-gradient(180deg, rgba(215, 240, 252, 0.6) 0%, rgba(255, 255, 255, 0.5) 100%);
+            box-shadow: 0 0 0 1px rgba(90, 160, 200, 0.35), 0 8px 24px rgba(20, 90, 140, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            text-align: center;
+            color: #1a3a4d;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .footer p {
+            margin: 0 0 4px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .footer .footer-sub {
+            margin: 0;
+            font-size: 12px;
+            color: #0e5f8a;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .footer .footer-credit {
+            margin: 8px 0 0;
+            padding-top: 8px;
+            border-top: 1px solid rgba(90, 160, 200, 0.25);
+            font-size: 11px;
+            color: #5b8299;
+            text-shadow: none;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Verdana, Arial, sans-serif;
+            line-height: 1.5;
+            min-height: 100vh;
+            color: #1a3a4d;
+            background: #a5def3;
+            background-image:
+                radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 45%),
+                radial-gradient(ellipse at 85% 20%, rgba(160, 225, 255, 0.7) 0%, rgba(255, 255, 255, 0) 40%),
+                radial-gradient(ellipse at 50% 110%, rgba(80, 190, 240, 0.55) 0%, rgba(255, 255, 255, 0) 60%),
+                linear-gradient(180deg, #79c9ec 0%, #b8e6f7 45%, #a5def3 100%);
+            background-attachment: fixed;
+        }
+
+        .bubble1 {
+            position: fixed;
+            top: 6%;
+            left: 5%;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.98), rgba(170, 230, 255, 0.75) 50%, rgba(110, 200, 245, 0.35));
+            box-shadow: 0 6px 22px rgba(30, 120, 170, 0.45), inset -4px -5px 10px rgba(30, 120, 170, 0.4), inset 4px 5px 10px rgba(255, 255, 255, 0.95);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bubble2 {
+            position: fixed;
+            bottom: 10%;
+            right: 7%;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.98), rgba(180, 235, 255, 0.75) 50%, rgba(110, 200, 245, 0.35));
+            box-shadow: 0 5px 16px rgba(30, 120, 170, 0.4), inset -3px -4px 8px rgba(30, 120, 170, 0.4), inset 3px 4px 8px rgba(255, 255, 255, 0.95);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 820px;
+            max-width: 100%;
+            margin: 40px auto;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(215, 240, 252, 0.55) 100%);
+            box-shadow: 0 0 0 1px rgba(90, 160, 200, 0.4), 0 12px 40px rgba(20, 90, 140, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .titlebar {
+            border-radius: 10px 10px 0 0;
+            padding: 9px 16px;
+            text-align: center;
+            background: linear-gradient(180deg, #ffffff 0%, #e8f7ff 30%, #c8e9f9 55%, #a8d8f0 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 1px 0 rgba(90, 160, 200, 0.4);
+        }
+
+        .titlebar h1 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0e5f8a;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.2px;
+        }
+
+        .content {
+            padding: 28px 32px 32px;
+        }
+
+        .privacy-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #0f6b3a;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            background: linear-gradient(180deg, #e0f9ec, #b8ecd4);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 1px 3px rgba(40, 140, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            color: #1a3a4d;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 12px;
+            border: 1px solid #9cc8e0;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, #ffffff, #f2faff);
+            color: #123;
+            box-shadow: inset 0 1px 3px rgba(40, 130, 180, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2fb3d9;
+            box-shadow: inset 0 1px 3px rgba(40, 130, 180, 0.2), 0 0 0 2px rgba(47, 179, 217, 0.25);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        button {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 6px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-shadow: 0 1px 1px rgba(0, 60, 90, 0.5);
+            border: 1px solid #1a6e96;
+            background: linear-gradient(180deg, #f2fbfe 0%, #b0e0f5 18%, #4fb4dd 44%, #1e8fc0 56%, #2ea6d2 82%, #7ecfe9 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 0 rgba(0, 60, 90, 0.35), 0 2px 6px rgba(30, 130, 180, 0.4);
+        }
+
+        button:hover {
+            filter: brightness(1.06);
+        }
+
+        button:active {
+            filter: brightness(0.96);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 60, 90, 0.3), 0 1px 3px rgba(30, 130, 180, 0.35);
+        }
+
+        button.secondary {
+            color: #1a3a4d;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+            border: 1px solid #9cc0d4;
+            background: linear-gradient(180deg, #ffffff 0%, #eef8fd 18%, #cfe6f3 44%, #b8dcee 56%, #d6ecf8 82%, #f2fbfe 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(90, 150, 190, 0.35), 0 2px 6px rgba(40, 130, 180, 0.25);
+        }
+
+        .error {
+            font-size: 13px;
+            color: #c0392b;
+            background: linear-gradient(180deg, #fde7e4, #fbd9d5);
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: none;
+            border: 1px solid #f0b0a8;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .output-section {
+            border-top: 1px solid rgba(120, 190, 225, 0.6);
+            padding-top: 20px;
+            display: none;
+        }
+
+        .preview-box {
+            max-width: 100%;
+            text-align: center;
+            background: linear-gradient(180deg, #ffffff, #eef8fd);
+            border: 1px dashed #8cc6e2;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            box-shadow: inset 0 1px 4px rgba(40, 130, 180, 0.12);
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 4px;
+            box-shadow: 0 4px 14px rgba(40, 130, 180, 0.3);
+        }
+
+        .meta-info {
+            font-size: 12px;
+            color: #1a3a4d;
+            background: linear-gradient(180deg, #f2fbff, #dff2fb);
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 1px 3px rgba(40, 130, 180, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bubble1"></div>
+    <div class="bubble2"></div>
+
+    <div class="container">
+        <div class="titlebar">
+            <h1>Base64 Decoder &amp; Image Converter</h1>
+        </div>
+        <div class="content">
+            <div class="privacy-badge">100% Offline (No LocalStorage, No Cookies, No Network Trackers)
+            </div>
+
+            <label for="base64Input">Paste Base64 string or Data URI:</label>
+            <textarea id="base64Input" placeholder="data:image/png;base64,iVBORw0KGgo... or raw string here"></textarea>
+
+            <div class="controls">
+                <button id="decodeBtn">Decode &amp; Preview</button>
+                <button id="clearBtn" class="secondary">Clear View</button>
+            </div>
+
+            <div id="errorMsg" class="error"></div>
+
+            <div id="outputSection" class="output-section">
+                <label>Decoded Output Preview:</label>
+
+                <div id="imagePreviewContainer" class="preview-box" style="display:none;">
+                    <img id="imagePreview" src="" alt="Decoded Preview">
+                </div>
+
+                <div id="textPreviewContainer" style="display:none;">
+                    <textarea id="textPreview" readonly
+                        style="height: 120px; background: linear-gradient(180deg, #ffffff, #f2faff);"></textarea>
+                </div>
+
+                <div id="metaInfo" class="meta-info"></div>
+
+                <button id="downloadBtn">Download Decoded File</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            try {
+                if (window.localStorage) window.localStorage.clear();
+                if (window.sessionStorage) window.sessionStorage.clear();
+            } catch (e) { }
+
+            var inputArea = document.getElementById('base64Input');
+            var decodeBtn = document.getElementById('decodeBtn');
+            var clearBtn = document.getElementById('clearBtn');
+            var errorMsg = document.getElementById('errorMsg');
+            var outputSection = document.getElementById('outputSection');
+            var imgPreviewContainer = document.getElementById('imagePreviewContainer');
+            var imgPreview = document.getElementById('imagePreview');
+            var textPreviewContainer = document.getElementById('textPreviewContainer');
+            var textPreview = document.getElementById('textPreview');
+            var metaInfo = document.getElementById('metaInfo');
+            var downloadBtn = document.getElementById('downloadBtn');
+
+            var currentFileBlob = null;
+            var currentExtension = 'bin';
+
+            decodeBtn.addEventListener('click', handleDecode);
+
+            clearBtn.addEventListener('click', function () {
+                inputArea.value = '';
+                outputSection.style.display = 'none';
+                errorMsg.style.display = 'none';
+                safelyClearData();
+            });
+
+            function safelyClearData() {
+                if (imgPreview.src.indexOf('blob:') === 0) {
+                    URL.revokeObjectURL(imgPreview.src);
+                }
+                imgPreview.src = '';
+                textPreview.value = '';
+                currentFileBlob = null;
+                currentExtension = 'bin';
+            }
+
+            function handleDecode() {
+                errorMsg.style.display = 'none';
+                outputSection.style.display = 'none';
+                imgPreviewContainer.style.display = 'none';
+                textPreviewContainer.style.display = 'none';
+                safelyClearData();
+
+                var rawInput = inputArea.value.trim();
+                if (!rawInput) {
+                    showError("Please paste a Base64 string first.");
+                    return;
+                }
+
+                var mimeType = 'application/octet-stream';
+                var base64Data = rawInput;
+
+                var dataUriRegex = /^data:(.+?);base64,(.+)$/s;
+                var match = rawInput.match(dataUriRegex);
+
+                if (match) {
+                    mimeType = match[1];
+                    base64Data = match[2].replace(/\s/g, '');
+                } else {
+                    base64Data = rawInput.replace(/\s/g, '');
+                    if (base64Data.indexOf('iVBORw') === 0) mimeType = 'image/png';
+                    else if (base64Data.indexOf('/9j/') === 0) mimeType = 'image/jpeg';
+                    else if (base64Data.indexOf('R0lGOD') === 0) mimeType = 'image/gif';
+                    else if (base64Data.indexOf('UklGR') === 0) mimeType = 'image/webp';
+                    else if (base64Data.indexOf('PHN2Z') === 0) mimeType = 'image/svg+xml';
+                }
+
+                try {
+                    var byteCharacters = atob(base64Data);
+                    var byteNumbers = new Array(byteCharacters.length);
+                    for (var i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    var byteArray = new Uint8Array(byteNumbers);
+                    currentFileBlob = new Blob([byteArray], { type: mimeType });
+
+                    var extMap = {
+                        'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif',
+                        'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/x-icon': 'ico',
+                        'text/plain': 'txt', 'text/html': 'html', 'application/json': 'json'
+                    };
+                    currentExtension = extMap[mimeType] || (mimeType.split('/')[1] || 'bin');
+
+                    var sizeKB = (currentFileBlob.size / 1024).toFixed(2);
+                    metaInfo.innerHTML = '<strong>Type:</strong> ' + mimeType + ' | <strong>Size:</strong> ' + sizeKB + ' KB';
+
+                    if (mimeType.indexOf('image/') === 0) {
+                        var objectUrl = URL.createObjectURL(currentFileBlob);
+                        imgPreview.src = objectUrl;
+                        imgPreviewContainer.style.display = 'block';
+                    } else {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            textPreview.value = e.target.result;
+                            textPreviewContainer.style.display = 'block';
+                        };
+                        reader.readAsText(currentFileBlob);
+                    }
+
+                    outputSection.style.display = 'block';
+
+                } catch (e) {
+                    showError("Invalid Base64 payload structure. Verify text is not corrupted.");
+                }
+            }
+
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorMsg.style.display = 'block';
+            }
+
+            downloadBtn.addEventListener('click', function () {
+                if (!currentFileBlob) return;
+                var url = URL.createObjectURL(currentFileBlob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'decoded_' + Date.now() + '.' + currentExtension;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        })();
+    </script>
+    <footer class="footer">
+        <p>
+            <strong>Base64 Decoder &amp; Image Converter</strong> that runs entirely in your browser.
+        </p>
+        <p class="footer-sub">
+            100% Offline &amp; works without an internet connection =D
+        </p>
+        <p class="footer-credit">scelerusfraeyla · 2026</p>
+    </footer>
+</body>
+</html>
