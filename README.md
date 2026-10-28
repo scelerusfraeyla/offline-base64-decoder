@@ -28,6 +28,8 @@ a single-file html webpage with javascript built-in: offline [Base64](https://en
 ## disclaimer
 * this single-file html app was developed with assistance of a local generative AI.
 * the code is provided as-is, without warranty of any kind.
+* you are free to use, fork, and share it under the MIT license.
+
 
 ## license
-* you are free to use, modify, and redistribute it under the MIT license.
+Released under the [MIT License](LICENSE).
